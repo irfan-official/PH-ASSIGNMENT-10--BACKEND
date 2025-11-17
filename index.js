@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import ApiRouter from "./routes/api.routes.js";
+import EmailRouter from "./routes/api.email.routes.js";
 import connectDB from "./connections/mongodb.connection.js";
 import cookieParser from "cookie-parser";
 import allowedOrigins from "./config/allowOrigin.config.js";
@@ -36,7 +37,7 @@ app.use(express.urlencoded({ extended: true }));
 // app.use(express.static(frontendPath));
 
 app.use("/api/v1/", ApiRouter);
-
+app.use("/api/v1/send/email/", EmailRouter);
 // app.get("/*", (req, res) => {
 //   res.sendFile(path.join(frontendPath, "index.html"));
 // });
