@@ -96,7 +96,7 @@ class Review {
 
     Object.assign(
       this,
-      { ...validData, loved: [] },
+      { ...validData, loved: [], comments: {} },
       {
         createdAt: new Date().toISOString().replace("Z", "+00:00"),
       }

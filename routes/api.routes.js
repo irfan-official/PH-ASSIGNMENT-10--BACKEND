@@ -304,49 +304,6 @@ router.get("/search/review", async (req, res, next) => {
   }
 });
 
-router.post("/create/comment", async (req, res, next) => {
-  try {
-    let { name, email, reviewId, comment } = req.body;
-
-    name: name.trim();
-    email: email.trim();
-    comment: comment.trim();
-
-    if (!name || !email || !comment || !reviewId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Missing required fields" });
-    }
-
-    const user = await findOne({
-      data: { name, email },
-      collectionName: "users",
-    });
-
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-
-    const createdComment = await createOne({
-      data: new Comment({
-        user: new ObjectId(user._id),
-        review: new ObjectId(reviewId),
-        comment,
-      }),
-      collectionName: "comments",
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "comment created!",
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
 router.put("/update/user", async (req, res, next) => {
   try {
     let { name, email, image } = req.body;
@@ -409,39 +366,6 @@ router.put("/update/user", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-});
-
-router.get("/shows/all-comments", async (req, res, next) => {
-  const { reviewId } = req.query;
-
-  if (!reviewId) {
-    return res.status(300).json({
-      success: false,
-      message: reviewId,
-    });
-  }
-
-  const comments = await find({
-    data: {
-      review: new ObjectId(reviewId),
-    },
-    collectionName: "comments",
-  });
-
-  console.log("comments ===> ", comments);
-
-  for (let comment of comments) {
-    let user = await findOne({
-      data: { _id: new ObjectId(comment.user) },
-      collectionName: "users",
-    });
-    comment.user = user;
-  }
-
-  return res.status(200).json({
-    success: true,
-    data: comments,
-  });
 });
 
 router.get("/shows/all-reviews", verifyOrigin, async (req, res, next) => {
@@ -674,6 +598,74 @@ router.delete("/remove/reviews", async (req, res, next) => {
       message: "Review deleted successfully",
     });
   } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/shows/all-comments", async (req, res, next) => {
+  try {
+    console.log("/shows/all-comments = ", req.query.review_id);
+
+    const allComments = await find({
+      data: {
+        review: new ObjectId(req.query.review_id),
+      },
+      collectionName: "comments",
+    });
+
+    const newAllComments = [];
+
+    for (let obj of allComments) {
+      let searchUser = await findOne({
+        data: {
+          _id: new ObjectId(obj.user),
+        },
+        collectionName: "users",
+      });
+
+      newAllComments.push({
+        image: searchUser.image,
+        name: searchUser.name,
+        createdAt: obj.createdAt,
+        comment: obj.comment,
+      });
+    }
+
+    console.log("all comments = ", newAllComments);
+
+    return res.status(200).json({
+      success: true,
+      data: newAllComments || [],
+    });
+  } catch (error) {
+    console.log("Error /get/comments => ", error.message);
+    next(error);
+  }
+});
+
+router.post("/create/comments", async (req, res, next) => {
+  try {
+    console.log("/create/comments = ", req?.body);
+
+    const { review_id, user_id, comment } = req.body;
+
+    const createComment = await createOne({
+      data: new Comment({
+        user: new ObjectId(user_id),
+        review: new ObjectId(review_id),
+        comment,
+      }),
+      collectionName: "comments",
+    });
+
+    console.log("comment created => ", createComment);
+
+    return res.status(200).json({
+      success: true,
+      // data: [],
+    });
+  } catch (error) {
+    console.log("Error /create/comments => ", error.message);
     next(error);
   }
 });
